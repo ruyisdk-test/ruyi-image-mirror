@@ -22,6 +22,7 @@ jobs:
         with:
           ref: packages-index
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Old HEAD
         run: |
@@ -38,10 +39,14 @@ jobs:
 
       - name: Check changes
         if: env.OLD_SHA != env.UPSTREAM_SHA
+        env:
+          GH_TOKEN: ${{ secrets.PUSH_PAT }}
         run: |
-          WATCH_PATH="./packages ./entities ./config.toml"
+          WATCH_PATH="packages entities config.toml"
 
-          if git diff --quiet "${OLD_SHA}" "${UPSTREAM_SHA}" -- ${WATCH_PATH}; then
+          git reset --hard "$UPSTREAM_SHA"
+
+          if ! git diff --quiet "${OLD_SHA}" "${UPSTREAM_SHA}" -- ${WATCH_PATH}; then
 
             TAR=images.tar.zstd
             TAG=$(date -u +%Y%m%d)
@@ -57,7 +62,5 @@ jobs:
             gh release upload "${TAG}" "${TAR}"
 
           fi
-
-          git reset --hard "$UPSTREAM_SHA"
-          git push origin HEAD:packages-index
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:packages-index
 
