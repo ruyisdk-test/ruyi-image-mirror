@@ -48,23 +48,41 @@ jobs:
 
           git reset --hard "$UPSTREAM_SHA"
 
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:packages-index
+          git push "https://${GITEE_USER}:${GITEE_TOKEN}@gitee.com/ruyisdk/packages-index.git" HEAD:main
+
           if ! git diff --quiet "${OLD_SHA}" "${UPSTREAM_SHA}" -- ${WATCH_PATH}; then
 
             TAR=images.tar.zstd
             TAG=$(date -u +%Y%m%d)
             RUN="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            NOTE="Auto release https://github.com/ruyisdk/packages-index/tree/${UPSTREAM_SHA}"$'\n'"Action run: ${RUN}"
             
             tar --zstd -cf ${TAR} ${WATCH_PATH}
 
             gh release create "${TAG}" \
               --title "${TAG}" \
-              --notes "Auto release https://github.com/ruyisdk/packages-index/tree/${UPSTREAM_SHA}"$'\n'"Action run: ${RUN}" \
+              --notes "${NOTE}" \
               --target packages-index
 
             gh release upload "${TAG}" "${TAR}"
 
-          fi
+            # gitee release
+            REL_ID_JS=$(curl -X POST "https://gitee.com/api/v5/repos/ruyisdk/packages-index/releases" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"access_token\": \"${GITEE_TOKEN}\",
+                \"tag_name\": \"${TAG}\",
+                \"name\": \"${TAG}\",
+                \"body\": \"${NOTE}\",
+                \"target_commitish\": \"main\"
+              })
+            REL_ID=$(echo "$REL_ID_JS" | sed -n 's/.*"id":\([0-9]*\).*/\1/p')
+            echo "Release id: ${REL_ID}"
 
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:packages-index
-          git push "https://${GITEE_USER}:${GITEE_TOKEN}@gitee.com/ruyisdk/packages-index.git" HEAD:packages-index
+            curl -sS -X POST \
+              -F "access_token=${GITEE_TOKEN}" \
+              -F "file=@${TAR}" \
+              "https://gitee.com/api/v5/repos/ruyisdk/packages-index/releases/${REL_ID}/attach_files"
+          fi
 
