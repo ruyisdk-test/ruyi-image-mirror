@@ -16,7 +16,7 @@ jobs:
       - name: Install utils
         run: |
           sudo apt-get update
-          sudo apt-get install -y zstd
+          sudo apt-get install -y zstd jq
 
       - uses: actions/checkout@v4
         with:
@@ -77,7 +77,7 @@ jobs:
                 \"body\": \"${NOTE}\",
                 \"target_commitish\": \"main\"
               }")
-            REL_ID=$(echo "$REL_ID_JS" | sed -n 's/.*"id":\([0-9]*\).*/\1/p')
+            REL_ID=$(echo "$REL_ID_JS" | jq -r '.id')
             echo "Release id: ${REL_ID}"
 
             curl -sS -X POST \
