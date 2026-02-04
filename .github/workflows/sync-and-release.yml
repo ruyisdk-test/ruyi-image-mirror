@@ -41,6 +41,8 @@ jobs:
         if: env.OLD_SHA != env.UPSTREAM_SHA
         env:
           GH_TOKEN: ${{ secrets.PUSH_PAT }}
+          GITEE_TOKEN: ${{ secrets.GITEE_PUSH_PAT }}
+          GITEE_USER: ${{ secrets.GITEE_PUSH_USER }}
         run: |
           WATCH_PATH="packages entities config.toml"
 
@@ -62,5 +64,7 @@ jobs:
             gh release upload "${TAG}" "${TAR}"
 
           fi
+
           git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:packages-index
+          git push "https://${GITEE_USER}:${GITEE_TOKEN}@gitee.com/ruyisdk/packages-index.git" HEAD:packages-index
 
