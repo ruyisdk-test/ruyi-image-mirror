@@ -56,7 +56,7 @@ jobs:
 
             gh release create "${TAG}" \
               --title "${TAG}" \
-              --notes "Auto release https://github.com/ruyisdk/packages-index/tree/${UPSTREAM_SHA}\nAction run: ${RUN}" \
+              --notes "Auto release https://github.com/ruyisdk/packages-index/tree/${UPSTREAM_SHA}"$'\n'"Action run: ${RUN}" \
               --target packages-index
 
             gh release upload "${TAG}" "${TAR}"
