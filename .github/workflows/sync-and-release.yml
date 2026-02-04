@@ -76,7 +76,7 @@ jobs:
                 \"name\": \"${TAG}\",
                 \"body\": \"${NOTE}\",
                 \"target_commitish\": \"main\"
-              })
+              }")
             REL_ID=$(echo "$REL_ID_JS" | sed -n 's/.*"id":\([0-9]*\).*/\1/p')
             echo "Release id: ${REL_ID}"
 
